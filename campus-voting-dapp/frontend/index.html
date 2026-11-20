@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Campus Decentralized Voting System</title>
+        <link rel="stylesheet" href="style.css">
+        <!-- Ethers.js CDN -->
+         <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    </head>
+    <body>
+        <!-- ==================== CENTERED SYSTEM MODAL DIALOG ==================== -->
+         <div id="customModalOverlay" class="modal-overlay hidden">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3 id="modalTitle">System Notice</h3>
+                </div>
+                <div class="modal-body">
+                    <p id="modalMessage">Message goes here.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="modalCloseBtn" class="modal-btn">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== WELCOME LANDING PAGE ==================== -->
+         <div id="welcomePage" class="welcome-container">
+            <div class="welcome-card">
+                <div class="logo-container">
+                    <img src="/campus-voting-dapp/docs/images/voting app.png" alt="Campus Voting Logo" class="system-logo">
+                </div>
+                <h1>Campus Decentralized Voting System</h1>
+                
+                <div class="rules-box">
+                    <h3> Official Voting Rules & Guidelines</h3>
+                    <ul>
+                        <li>One election per deployed contract.</li>
+                        <li>Only the admin can add candidates.</li>
+                        <li>Only authorized wallet addresses can vote.</li>
+                        <li>Voting is allowed only while the election is open.</li>
+                        <li>Anyone can view candidate names and vote counts.</li>
+                        <li>The admin can close the election to stop further voting</li>
+                    </ul>
+                </div>
+                <button id="enterSystemBtn" class="success" style="font-size: 1.1rem; padding: 14px; margin-top: 20px;">
+                 Start Voting System
+                </button>
+            </div>
+        </div>
+        
+        <!-- ==================== MAIN SYSTEM INTERFACE (Hidden Initially) ==================== -->
+         <div id="mainSystemContainer" class="container hidden">
+            <header>
+                <div class="header-logo-row">
+                    <img src="/campus-voting-dapp/docs/images/voting app.png" alt="Logo" class="header-logo">
+                    <h1> Campus Decentralized Voting System</h1>
+                </div>
+                <div id="wallet-section">
+                    <button id="connectButton">Connect MetaMask Wallet</button>
+                    <span id="walletStatus">Not Connected</span>
+                </div>
+            </header>
+            
+            <!-- Navigation Tabs -->
+             <nav class="tab-nav">
+                <button class="tab-btn active" id="navVotersBtn">Voters Portal</button>
+                <button class="tab-btn" id="navAdminBtn">Electoral Admin Portal</button>
+            </nav>
+            
+            <main>
+                <!-- Election Dashboard Status Banner -->
+                 <section class="card status-card">
+                    <div>
+                        <h2>Election Dashboard</h2>
+                    </div>
+                    <div class="status-right">
+                        <div id="electionStatus" class="badge closed">Election NOT STARTED</div>
+                        <div id="totalVotes">Total votes: 0</div>
+                    </div>
+                </section>
+                
+                <!-- ==================== VOTERS PAGE (Two-Column Layout) ==================== -->
+                 <div id="votersPage" class="voter-portal-grid">
+                    <!-- Left Column: Registration & Voter Login Panel -->
+                     <div id="registrationColumn" class="card">
+                        <h2>Voter Registration & Login</h2>
+                        
+                        <!-- Voter Registration Form -->
+                         <div class="form-group">
+                            <h3>Voter's Registration</h3>
+                            <p class="helper-text" id="regStatusNote">
+                            Connect your  MetaMask wallet address.</p>
+                            <input type="text" id="regFullName" placeholder="Full Name">
+                            <button id="registerVoterBtn" class="success">Register</button>
+                        </div>
+                        
+                        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+                        
+                        <!-- Voter Login Form -->
+                         <div class="form-group">
+                            <h3>2. Voter's Login</h3>
+                            <input type="text" id="loginFullName" placeholder="Registered Name">
+                            <button id="voterLoginBtn">Login</button>
+                            <p id="voterLoginBanner" class="helper-text" style="margin-top: 8px; font-weight: bold; color: var(--navy-blue);"> Session: Not Logged In</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Candidates & Voting / Results Portal -->
+                     <div class="card" id="candidatesColumn">
+                        <div id="portalHeaderContent">
+                            <h2> Candidates & Voting Ballot</h2>
+                        </div>
+                        <div id="candidateList"></div>
+                    </div>
+                </div>
+                
+                <!-- ==================== ADMIN PAGE ==================== -->
+                 <div id="adminPage" class="hidden">
+                    <!-- Premade Electoral Admin Login Section -->
+                     <section class="card" id="adminAuthSection">
+                        <h2> Electoral Admin Login</h2>
+                        <p class="helper-text" id="adminPromptText">Enter the premade Electoral Admin credentials and ensure the Contract Owner wallet is connected in MetaMask.</p>
+                        <div id="adminLoginForm" style="max-width: 420px; margin-top: 12px;">
+                            <input type="text" id="adminUsernameInput" placeholder="Admin Username (Premade: admin)">
+                            <input type="password" id="adminPasswordInput" placeholder="Admin Password (Premade: admin123)">
+                            <button id="adminLoginBtn">Login to Admin Portal</button>
+                        </div>
+                    </section>
+                    
+                    <!-- Admin Controls (Revealed after Premade Login + Owner Wallet Verification) -->
+                     <section class="card hidden" id="adminControlPanel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h2 style="margin: 0;"> Electoral Admin Controls</h2>
+                            <button id="adminLogoutBtn" class="danger" style="width: auto; padding: 6px 14px;">Logout Admin</button>
+                        </div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group" id="addCandidateBox">
+                                <h3>Add Candidate</h3>
+                                <p class="helper-text" id="addCandidateNote">Allowed only before the election starts.</p>
+                                <input type="text" id="candidateName" placeholder="Candidate Name (e.g. Maria Santos)">
+                                <input type="text" id="candidatePosition" placeholder="Position (e.g. President)">
+                                <button id="addCandidateButton">Add Candidate</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <h3>Authorize Voter Wallets</h3>
+                                <p class="helper-text">Select registered voter to authorize on-chain (Admin Only):</p>
+                                <select id="registeredVotersDropdown">
+                                    <option value="">-- Select Registered Voter --</option>
+                                </select>
+                                <input type="text" id="voterAddress" placeholder="Voter Wallet Address (0x...)">
+                                <button id="authorizeVoterButton">Authorize</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group span-2">
+                            <h3>Voting Process Management</h3>
+                            <div class="btn-row">
+                                <button id="startElectionButton" class="success">Start Election</button>
+                                <button id="endElectionButton" class="danger">Stop Election</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2026 - HOSTINGER TEAM - PBlockchain</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
